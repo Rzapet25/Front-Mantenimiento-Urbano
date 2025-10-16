@@ -4,11 +4,11 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import RegisterRequest from './pages/RegisterRequest';
 import RequestsList from './pages/RequestsList';
+import ProgramarSolicitud from './pages/ProgramarSolicitud';
 import './App.css';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  
   const handleLogin = () => {
     console.log('Login successful');
     setIsLoggedIn(true);
@@ -36,6 +36,10 @@ function App() {
         <Route 
           path="/solicitudes" 
           element={isLoggedIn ? <RequestsList /> : <Navigate to="/login" />} 
+        />
+        <Route
+        path="/programar/:id"
+        element={isLoggedIn ? <ProgramarSolicitud /> : <Navigate to="/login" />}
         />
       </Routes>
     </div>

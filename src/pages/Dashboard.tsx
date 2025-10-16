@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
@@ -83,19 +82,30 @@ export default function Dashboard() {
             />
           </div>
 
-          <div className="flex gap-4 mb-8">
-            <button 
+           <div className="flex gap-4 mb-8">
+           {/* Registrar solicitud */}
+             <button 
               onClick={() => navigate('/registrar')}
               className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium shadow-sm"
+             >
+           Registrar solicitud
+          </button>
+
+           {/* Consultar */}
+           <button 
+            onClick={() => navigate('/solicitudes')}
+            className="px-6 py-3 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium"
             >
-              Registrar solicitud
-            </button>
-            <button className="px-6 py-3 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium">
               Consultar
             </button>
-            <button className="px-6 py-3 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium">
-              Programar
-            </button>
+
+            {/* Programar */}
+           <button 
+           onClick={() => navigate('/programar/1')}
+           className="px-6 py-3 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium"
+             >
+           Programar
+          </button>
           </div>
 
           {loading ? (
@@ -109,9 +119,9 @@ export default function Dashboard() {
             </div>
           ) : (
             <RequestsTable
-              requests={latestRequests}
-              onProgramRequest={(id) => console.log('Programar solicitud:', id)}
-            />
+             requests={latestRequests}
+             showFinancialStatus={false}
+          />
           )}
         </main>
       </div>
