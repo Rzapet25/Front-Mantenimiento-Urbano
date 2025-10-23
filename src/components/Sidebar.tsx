@@ -6,7 +6,7 @@ export default function Sidebar() {
   const menuItems = [
     { path: '/dashboard', label: 'Dashboard' },
     { path: '/solicitudes', label: 'Solicitudes' },
-    { path: '/estadisticas', label: 'Estadísticas' },
+    { path: '/solicitudes-externas', label: 'Solicitudes Recibidas' },
     { path: '/finanzas', label: 'Finanzas' },
   ];
 
