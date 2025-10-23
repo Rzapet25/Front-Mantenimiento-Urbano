@@ -1,246 +1,164 @@
-import { useState, useEffect } from 'react';
+﻿import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlertCircle } from 'lucide-react';
+import { FileText } from 'lucide-react';
 import Header from '../components/Header';
-import { requestsService } from '../api/requestsService';
-import { mapApiRequestsToRequests } from '../utils/mappers';
-import {
-  getStatusColor,
-  getStatusText,
-  getPriorityColor,
-  getPriorityText,
-  getFinancialStatusColor,
-  getFinancialStatusText,
-} from '../utils/statusHelpers';
-// Debes importar el modal de Financiamiento si lo tienes
-// import ModalFinanciamiento from '../components/ModalFinanciamiento'; 
+import Layout from '../components/Layout';
+import RequestsTable from '../components/RequestsTable';
+import LoadingState from '../components/LoadingState';
+import { useRequestsData } from '../hooks/useRequestsData';
 
-import type { Request } from '../types';
-
+/**
+ * Página de lista completa de solicitudes
+ * Muestra TODAS las solicitudes (pendientes, programadas, finalizadas)
+ * Utiliza componentes optimizados y hook personalizado para gestión de datos
+ * Permite filtrado por ESTADO y PRIORIDAD
+ */
 export default function RequestsList() {
-  const navigate = useNavigate();
-  const [dateFilter, setDateFilter] = useState('');
-  const [requests, setRequests] = useState<Request[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const [estadoFilter, setEstadoFilter] = useState<string>(''); // Filtro por estado
+  const [prioridadFilter, setPrioridadFilter] = useState<string>(''); // Filtro por prioridad
+  const [fechaFilter, setFechaFilter] = useState<string>(''); // Filtro por fecha
 
-  // ESTADOS PARA EL MODAL DE FINANCIAMIENTO
-  const [modalOpen, setModalOpen] = useState(false);
-  const [selectedId, setSelectedId] = useState<number | null>(null);
+  // Hook personalizado para manejar datos de solicitudes (TODAS, sin límite)
+  const { requests, loading, error, refetch } = useRequestsData();
 
+  // Función para manejar programación de solicitud
+  const handleProgramRequest = (id: number | string) => {
+    navigate(`/programar/${id}`);
+  };
 
-  // FUNCIÓN DE NAVEGACIÓN PARA PROGRAMAR (Paso 1 del CU-03)
-  const handleProgramRequest = (id: number | string) => {
-    navigate(`/programar/${id}`);
-  };
+  // Aplicar filtros localmente (temporal hasta que el backend los soporte)
+  const filteredRequests = requests.filter(request => {
+    if (estadoFilter && request.status !== estadoFilter) return false; // Filtro por estado
+    if (prioridadFilter && request.priority !== prioridadFilter) return false; // Filtro por prioridad
+    if (fechaFilter && request.date !== fechaFilter) return false; // Filtro por fecha exacta
+    return true;
+  });
+  
+  // Paginación
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(filteredRequests.length / itemsPerPage);
+  const paginatedRequests = filteredRequests.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
-  // FUNCIONES PARA EL MODAL DE FINANCIAMIENTO
-  const handleOpenModal = (id: number) => {
-    setSelectedId(id);
-    setModalOpen(true);
-  };
-  const handleCloseModal = () => {
-    setModalOpen(false);
-    setSelectedId(null);
-    // Aquí podrías recargar las solicitudes si el financiamiento se guarda
-  };
-
-  // Cargar solicitudes pendientes al montar el componente
-  useEffect(() => {
-    const fetchRequests = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const apiRequests = await requestsService.getPendingRequests();
-        const mappedRequests = mapApiRequestsToRequests(apiRequests);
-        setRequests(mappedRequests);
-      } catch (err) {
-        console.error('Error al cargar solicitudes:', err);
-        setError('No se pudieron cargar las solicitudes. Por favor, intenta de nuevo.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchRequests();
-  }, []); 
-
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <Header
-        title="Gestión de Mantenimiento Urbano"
-        showSearch={false}
-      />
-
-      <main className="max-w-7xl mx-auto p-8">
-        <div className="bg-white rounded-2xl shadow-lg p-8">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 bg-green-300 rounded-full flex items-center justify-center">
-              <AlertCircle className="text-green-700" size={24} />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-800">Lista de Solicitudes Pendientes</h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            {/* Filtros de Zona, Tipo y Fecha (Sin cambios) */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Zona</label>
-              <select className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none">
-                <option>Todas las zonas</option>
-                <option>Zona 1</option>
-                <option>Zona 7</option>
-                <option>Zona 12</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Tipo</label>
-              <select className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none">
-                <option>Todos los tipos</option>
-                <option>Baches</option>
-                <option>Alcantarillas</option>
-                <option>Alumbrado</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Fecha</label>
-              <input
-                type="date"
-                value={dateFilter}
-                onChange={(e) => setDateFilter(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
-              />
-            </div>
-
-            {/* ELIMINAR O DEJAR VACÍO el botón "Programar trabajo" ya que la acción se hace por fila */}
-            <div className="flex items-end">
-              <button className="w-full px-6 py-2 bg-green-300 hover:bg-green-400 text-gray-800 font-medium rounded-lg transition" disabled>
-                Filtrar
-              </button>
-            </div>
-          </div>
-
-          <div className="overflow-x-auto">
-            {loading ? (
-              <div className="text-center py-12">
-                <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
-                <p className="mt-4 text-gray-600">Cargando solicitudes...</p>
-              </div>
-            ) : error ? (
-              <div className="text-center py-12">
-                <div className="text-red-500 mb-4">
-                  <AlertCircle size={48} className="mx-auto" />
-                </div>
-                <p className="text-red-600 font-semibold">{error}</p>
-                <button
-                  onClick={() => window.location.reload()}
-                  className="mt-4 px-6 py-2 bg-green-300 hover:bg-green-400 text-gray-800 font-medium rounded-lg transition"
-                >
-                  Reintentar
-                </button>
-              </div>
-            ) : requests.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-gray-600">No hay solicitudes pendientes.</p>
-              </div>
-            ) : (
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b-2 border-gray-200">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">ID</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Tipo</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Ubicación</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Descripción</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Prioridad</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Estado</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Estado Financiero</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Fecha</th>
-                    {/* CORRECCIÓN: Eliminamos las columnas duplicadas de "Estado Financiero" y "Fecha" */}
-                    {/* AÑADIR: Cabeceras de Acción y Financiamiento */}
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Acción</th> 
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Financiamiento</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {requests.map((request) => (
-                    <tr key={request.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 text-sm font-medium text-gray-900">{request.id}</td>
-                      <td className="px-6 py-4 text-sm text-gray-600">{request.tipo}</td>
-                      <td className="px-6 py-4 text-sm text-gray-600">{request.location}</td>
-                      <td className="px-6 py-4 text-sm text-gray-600">{request.description}</td>
-                      <td className="px-6 py-4">
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getPriorityColor(request.priority)}`}>
-                          {getPriorityText(request.priority)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(request.status)}`}>
-                          {getStatusText(request.status)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getFinancialStatusColor(request.financialStatus)}`}>
-                          {getFinancialStatusText(request.financialStatus)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">{request.date}</td>
-                      
-                      {/* ✅ CELDA DE ACCIÓN (Programar) */}
-                      <td className="px-6 py-4">
-                        <button
-                          onClick={() => handleProgramRequest(request.id)}
-                          className="text-sm text-gray-900 hover:text-green-600 font-medium"
-                        >
-                          Programar
-                        </button>
-                      </td>
-
-                      {/* ✅ CELDA DE FINANCIAMIENTO */}
-                      <td className="px-6 py-4">
-                        {request.status === 'PENDIENTE' ? ( // Usamos PENDIENTE como ejemplo de cuándo se puede programar/gestionar
-                          <button
-                            onClick={() => handleOpenModal(request.id)} 
-                            className="text-sm text-blue-700 hover:text-blue-900 font-medium border border-blue-400 rounded px-3 py-1"
-                          >
-                            Solicitar financiamiento
-                          </button>
-                        ) : (
-                          <span className="text-xs text-gray-400">No disponible</span>
-                        )}
-                      </td>
-
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
-
-          <div className="mt-4 text-sm text-gray-600">
-            {!loading && !error && requests.length > 0 && (
-              `Mostrando 1-${requests.length} de ${requests.length} resultados`
-            )}
-          </div>
-        </div>
-        
-        {/* Aquí debes agregar el ModalFinanciamiento si lo tienes */}
-        {/*
-        <ModalFinanciamiento
-            open={modalOpen}
-            onClose={handleCloseModal}
-            solicitudId={selectedId}
-            // Agrega el resto de props necesarias para tu modal
+  return (
+    <Layout>
+      <div className="min-h-screen bg-gray-50">
+        <Header
+          title="Gestión de Mantenimiento Urbano"
+          showSearch={false}
         />
-        */}
 
-        <div className="mt-6 flex justify-end">
-          <button 
-            onClick={() => navigate('/dashboard')}
-            className="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded-lg transition"
-          >
-            Volver al Dashboard
-          </button>
-        </div>
-      </main>
-    </div>
-  );
+      <main className="max-w-7xl mx-auto p-8">
+        <div className="bg-white rounded-2xl shadow-lg p-8">
+          {/* Título */}
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-12 h-12 bg-green-300 rounded-full flex items-center justify-center">
+              <FileText className="text-green-700" size={24} />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-800">Todas las Solicitudes</h2>
+          </div>
+
+          {/* Filtros de Estado, Prioridad y Fecha */}
+          <div className="mb-6 flex gap-4">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Filtrar por Estado
+              </label>
+              <select
+                value={estadoFilter}
+                onChange={(e) => setEstadoFilter(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+              >
+                <option value="">Todos los estados</option>
+                <option value="PENDIENTE">Pendiente</option>
+                <option value="PROGRAMADA">Programada</option>
+                <option value="FINALIZADA">Finalizada</option>
+              </select>
+            </div>
+
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Filtrar por Prioridad
+              </label>
+              <select
+                value={prioridadFilter}
+                onChange={(e) => setPrioridadFilter(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+              >
+                <option value="">Todas las prioridades</option>
+                <option value="ALTA">Alta</option>
+                <option value="MEDIA">Media</option>
+                <option value="BAJA">Baja</option>
+              </select>
+            </div>
+
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Filtrar por Fecha
+              </label>
+              <input
+                type="date"
+                value={fechaFilter}
+                onChange={(e) => setFechaFilter(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+              />
+            </div>
+          </div>
+
+          {/* Estado de carga/error usando componente reutilizable */}
+          <LoadingState 
+            loading={loading} 
+            error={error} 
+            empty={!loading && !error && filteredRequests.length === 0}
+            emptyMessage="No hay solicitudes que coincidan con los filtros."
+            onRetry={refetch}
+          />
+
+          {/* Tabla de solicitudes usando componente reutilizable */}
+          {!loading && !error && filteredRequests.length > 0 && (
+            <>
+              <RequestsTable
+                requests={paginatedRequests}
+                variant="full"
+                showFinancialStatus={true}
+                showActions={true}
+                showFinancingButton={true}
+                onProgramRequest={handleProgramRequest}
+              />
+
+              <div className="mt-4 text-sm text-gray-600">
+                Mostrando 1-{filteredRequests.length} de {requests.length} resultados
+                {filteredRequests.length !== requests.length && ` (filtrado de ${requests.length})`}
+              </div>
+            </>
+          )}
+          {/* Controles de paginación */}
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center gap-2 mt-6">
+              <button
+                className="px-3 py-1 rounded bg-gray-200 text-gray-700 disabled:opacity-50"
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+              >
+                Anterior
+              </button>
+              <span className="mx-2 text-gray-700">Página {currentPage} de {totalPages}</span>
+              <button
+                className="px-3 py-1 rounded bg-gray-200 text-gray-700 disabled:opacity-50"
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+              >
+                Siguiente
+              </button>
+            </div>
+          )}
+        </div>
+      </main>
+      </div>
+    </Layout>
+  );
 }

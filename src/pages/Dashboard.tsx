@@ -1,130 +1,212 @@
-import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import Header from '../components/Header';
-import Sidebar from '../components/Sidebar';
+import Layout from '../components/Layout';
 import StatsCard from '../components/StatsCard';
-import RequestsTable from '../components/RequestsTable';
-import { requestsService } from '../api/requestsService';
-import { mapApiRequestsToRequests } from '../utils/mappers';
-import type { Request } from '../types';
+import LoadingState from '../components/LoadingState';
+import { useRequestsData } from '../hooks/useRequestsData';
+
+const COLORS = {
+  ALTA: '#ef4444',    // rojo
+  MEDIA: '#f59e0b',   // amarillo
+  BAJA: '#10b981',    // verde
+  PENDIENTE: '#94a3b8',    // gris
+  PROGRAMADA: '#3b82f6',   // azul
+  FINALIZADA: '#10b981',   // verde
+  CANCELADA: '#6b7280',    // gris oscuro
+  EN_PROGRESO: '#8b5cf6', // púrpura
+};
 
 export default function Dashboard() {
-
   const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [requests, setRequests] = useState<Request[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  
+  // Hook personalizado para manejar datos de solicitudes
+  const { requests, loading, error } = useRequestsData({ onlyPending: false });
 
-  // Cargar todas las solicitudes al montar el Dashboard
-  useEffect(() => {
-    const fetchRequests = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const apiRequests = await requestsService.getPendingRequests();
-        const mappedRequests = mapApiRequestsToRequests(apiRequests);
-        setRequests(mappedRequests);
-      } catch {
-        setError('No se pudieron cargar las solicitudes.');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchRequests();
-  }, []);
-
-  // Calcular totales por estado
+  // Calcular estadísticas
   const stats = {
-    pending: requests.filter(r => r.status === 'PENDIENTE').length,
-    scheduled: requests.filter(r => r.status === 'PROGRAMADA').length,
-    completed: requests.filter(r => r.status === 'FINALIZADA').length,
+  pending: requests.filter(r => r.status === 'PENDIENTE').length,
+  scheduled: requests.filter(r => r.status === 'PROGRAMADA').length,
+  completed: requests.filter(r => r.status === 'FINALIZADA').length,
+  financed: requests.filter(r => r.financialStatus === 'FINANCIADA').length,
   };
 
-  // Mostrar las últimas 5 solicitudes (ordenadas por fecha descendente)
-  const latestRequests = [...requests]
-    .sort((a, b) => b.date.localeCompare(a.date))
-    .slice(0, 5);
+  // Datos para gráficos
+  const priorityData = [
+    {
+      name: 'Alta',
+      value: requests.filter(r => r.priority === 'ALTA').length,
+      fill: COLORS.ALTA
+    },
+    {
+      name: 'Media',
+      value: requests.filter(r => r.priority === 'MEDIA').length,
+      fill: COLORS.MEDIA
+    },
+    {
+      name: 'Baja',
+      value: requests.filter(r => r.priority === 'BAJA').length,
+      fill: COLORS.BAJA
+    },
+  ].filter(item => item.value > 0);
+
+  const statusData = [
+    {
+      name: 'Pendiente',
+      value: requests.filter(r => r.status === 'PENDIENTE').length,
+      fill: COLORS.PENDIENTE
+    },
+    {
+      name: 'Programada',
+      value: requests.filter(r => r.status === 'PROGRAMADA').length,
+      fill: COLORS.PROGRAMADA
+    },
+    {
+      name: 'En Progreso',
+      value: requests.filter(r => r.status === 'EN_PROGRESO').length,
+      fill: COLORS.EN_PROGRESO
+    },
+    {
+      name: 'Finalizada',
+      value: requests.filter(r => r.status === 'FINALIZADA').length,
+      fill: COLORS.FINALIZADA
+    },
+    {
+      name: 'Cancelada',
+      value: requests.filter(r => r.status === 'CANCELADA').length,
+      fill: COLORS.CANCELADA
+    },
+    {
+      name: 'Financiada',
+      value: requests.filter(r => r.financialStatus === 'FINANCIADA').length,
+      fill: '#22d3ee' // color celeste para distinguir
+    },
+  ].filter(item => item.value > 0);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header
-        title="Mantenimiento Urbano"
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        username="username"
-      />
+    <Layout>
+      <div className="min-h-screen bg-gray-50">
+        <Header
+          title="Mantenimiento Urbano"
+          showSearch={false}
+          username="username"
+        />
 
-      <div className="flex">
-        <Sidebar />
-
-        <main className="flex-1 p-8">
+        <main className="p-8">
           <h2 className="text-3xl font-bold text-gray-800 mb-8">Dashboard</h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <StatsCard
-              title="Pendientes"
-              value={stats.pending}
-              color="orange"
-              onViewDetails={() => console.log('Ver pendientes')}
+          {/* Estado de carga/error */}
+          {loading || error ? (
+            <LoadingState 
+              loading={loading} 
+              error={error} 
+              onRetry={() => window.location.reload()}
             />
-            <StatsCard
-              title="Programadas"
-              value={stats.scheduled}
-              color="blue"
-              onViewDetails={() => console.log('Ver programadas')}
-            />
-            <StatsCard
-              title="Atendidas"
-              value={stats.completed}
-              color="green"
-              onViewDetails={() => console.log('Ver atendidas')}
-            />
-          </div>
-
-           <div className="flex gap-4 mb-8">
-           {/* Registrar solicitud */}
-             <button 
-              onClick={() => navigate('/registrar')}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium shadow-sm"
-             >
-           Registrar solicitud
-          </button>
-
-           {/* Consultar */}
-           <button 
-            onClick={() => navigate('/solicitudes')}
-            className="px-6 py-3 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium"
-            >
-              Consultar
-            </button>
-
-            {/* Programar */}
-           <button 
-           onClick={() => navigate('/programar/1')}
-           className="px-6 py-3 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium"
-             >
-           Programar
-          </button>
-          </div>
-
-          {loading ? (
-            <div className="text-center py-12">
-              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-              <p className="mt-4 text-gray-600">Cargando solicitudes...</p>
-            </div>
-          ) : error ? (
-            <div className="text-center py-12">
-              <p className="text-red-600 font-semibold">{error}</p>
-            </div>
           ) : (
-            <RequestsTable
-             requests={latestRequests}
-             showFinancialStatus={false}
-          />
+            <>
+              {/* Cards de métricas */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <StatsCard
+                  title="Pendientes"
+                  value={stats.pending}
+                  color="orange"
+                  info="Solicitudes que aún no han sido atendidas ni programadas."
+                />
+                <StatsCard
+                  title="Programadas"
+                  value={stats.scheduled}
+                  color="blue"
+                  info="Solicitudes que ya tienen fecha y cuadrilla asignada."
+                />
+                <StatsCard
+                  title="Financiadas"
+                  value={stats.financed}
+                  color="green"
+                  info="Solicitudes que ya han sido financiadas."
+                />
+              </div>
+
+              {/* Botones de navegación */}
+              <div className="flex gap-4 mb-8">
+                <button 
+                  onClick={() => navigate('/solicitudes')}
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium shadow-sm"
+                >
+                  Ver Todas las Solicitudes
+                </button>
+
+                <button 
+                  onClick={() => navigate('/solicitudes-externas')}
+                  className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium shadow-sm"
+                >
+                  Solicitudes Recibidas
+                </button>
+              </div>
+
+              {/* Gráficos */}
+              {requests.length > 0 && (
+                <>
+                  <h3 className="text-xl font-semibold text-gray-800 mb-6">
+                    Estadísticas Visuales
+                  </h3>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    {/* Gráfico de Prioridad */}
+                    {priorityData.length > 0 && (
+                      <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                        <h4 className="text-lg font-semibold text-gray-800 mb-4">
+                          Distribución por Prioridad
+                        </h4>
+                        <ResponsiveContainer width="100%" height={300}>
+                          <PieChart>
+                            <Pie
+                              data={priorityData}
+                              cx="50%"
+                              cy="50%"
+                              labelLine={false}
+                              label={({ name, percent }) => `${name}: ${((percent as number) * 100).toFixed(0)}%`}
+                              outerRadius={100}
+                              fill="#8884d8"
+                              dataKey="value"
+                            >
+                              {priorityData.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.fill} />
+                              ))}
+                            </Pie>
+                            <Tooltip />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                    )}
+
+                    {/* Gráfico de Estado */}
+                    {statusData.length > 0 && (
+                      <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                        <h4 className="text-lg font-semibold text-gray-800 mb-4">
+                          Distribución por Estado
+                        </h4>
+                        <ResponsiveContainer width="100%" height={300}>
+                          <BarChart data={statusData}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="name" />
+                            <YAxis />
+                            <Tooltip />
+                            <Legend />
+                            <Bar dataKey="value" name="Cantidad">
+                              {statusData.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.fill} />
+                              ))}
+                            </Bar>
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </>
           )}
         </main>
       </div>
-    </div>
+    </Layout>
   );
 }
