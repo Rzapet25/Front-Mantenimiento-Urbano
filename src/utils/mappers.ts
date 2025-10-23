@@ -2,7 +2,7 @@ import type { ApiRequest, Request } from '../types';
 
 /**
  * Transforma los datos de la API al formato usado internamente en la UI
- * Mapea todos los campos del backend, incluyendo tipo, fuente y estadoFinanciero
+ * Mapea todos los campos del backend, incluyendo tipo, fuente, estadoFinanciero y programación
  */
 export const mapApiRequestToRequest = (apiRequest: ApiRequest): Request => {
   return {
@@ -16,6 +16,10 @@ export const mapApiRequestToRequest = (apiRequest: ApiRequest): Request => {
     source: apiRequest.fuente,
     externalReportId: apiRequest.reporteIdExtern,
     financialStatus: apiRequest.estadoFinanciero,
+    financingId: apiRequest.idFinanciamiento,
+    scheduledDate: apiRequest.fechaProgramada,
+    assignedCrew: apiRequest.cuadrillaAsignada,
+    assignedResources: apiRequest.recursosAsignados,
   };
 };
 

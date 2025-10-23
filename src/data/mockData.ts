@@ -13,7 +13,11 @@ export const initialRequests: Request[] = [
     date: '2025-09-24',
     source: 'PARTICIPACION_CIUDADANA',
     externalReportId: 1001,
-    financialStatus: 'PENDIENTE'
+    financialStatus: 'PENDIENTE',
+    financingId: null,
+    scheduledDate: null,
+    assignedCrew: null,
+    assignedResources: null
   },
   {
     id: 2,
@@ -25,7 +29,11 @@ export const initialRequests: Request[] = [
     date: '2025-09-23',
     source: 'CIUDADANO',
     externalReportId: 1002,
-    financialStatus: 'APROBADO'
+    financialStatus: 'APROBADO',
+    financingId: 1,
+    scheduledDate: '2025-10-01',
+    assignedCrew: 'Cuadrilla A',
+    assignedResources: ['Palas', 'Material de drenaje']
   },
   {
     id: 3,
@@ -37,7 +45,11 @@ export const initialRequests: Request[] = [
     date: '2025-09-22',
     source: 'INTERNO',
     externalReportId: 1003,
-    financialStatus: 'EN_ESPERA_FINANCIAMIENTO'
+    financialStatus: 'EN_ESPERA_FINANCIAMIENTO',
+    financingId: null,
+    scheduledDate: '2025-09-25',
+    assignedCrew: 'Cuadrilla B',
+    assignedResources: ['Equipo eléctrico', 'Grúa']
   },
   {
     id: 4,
@@ -49,7 +61,11 @@ export const initialRequests: Request[] = [
     date: '2025-09-21',
     source: 'PARTICIPACION_CIUDADANA',
     externalReportId: 1004,
-    financialStatus: 'FINANCIADA'
+    financialStatus: 'FINANCIADA',
+    financingId: 2,
+    scheduledDate: '2025-09-22',
+    assignedCrew: 'Cuadrilla C',
+    assignedResources: ['Herramientas eléctricas', 'Señales de tránsito']
   },
   {
     id: 5,
@@ -61,7 +77,11 @@ export const initialRequests: Request[] = [
     date: '2025-09-20',
     source: 'CIUDADANO',
     externalReportId: 1005,
-    financialStatus: 'RECHAZADO'
+    financialStatus: 'RECHAZADO',
+    financingId: null,
+    scheduledDate: null,
+    assignedCrew: null,
+    assignedResources: null
   },
 ];
 
@@ -76,7 +96,11 @@ export const dashboardData: Request[] = [
     date: '2025-09-24',
     source: 'PARTICIPACION_CIUDADANA',
     externalReportId: 2001,
-    financialStatus: 'PENDIENTE'
+    financialStatus: 'PENDIENTE',
+    financingId: null,
+    scheduledDate: null,
+    assignedCrew: null,
+    assignedResources: null
   },
   {
     id: 102,
@@ -88,7 +112,11 @@ export const dashboardData: Request[] = [
     date: '2025-09-24',
     source: 'CIUDADANO',
     externalReportId: 2002,
-    financialStatus: 'APROBADO'
+    financialStatus: 'APROBADO',
+    financingId: 3,
+    scheduledDate: '2025-09-26',
+    assignedCrew: 'Cuadrilla D',
+    assignedResources: ['Herramientas de excavación']
   },
   {
     id: 103,
@@ -100,7 +128,11 @@ export const dashboardData: Request[] = [
     date: '2025-09-24',
     source: 'INTERNO',
     externalReportId: 2003,
-    financialStatus: 'FINANCIADA'
+    financialStatus: 'FINANCIADA',
+    financingId: 4,
+    scheduledDate: '2025-09-24',
+    assignedCrew: 'Cuadrilla E',
+    assignedResources: ['Lámpara LED', 'Escalera']
   },
   {
     id: 104,
@@ -112,7 +144,11 @@ export const dashboardData: Request[] = [
     date: '2025-09-24',
     source: 'PARTICIPACION_CIUDADANA',
     externalReportId: 2004,
-    financialStatus: 'EN_ESPERA_FINANCIAMIENTO'
+    financialStatus: 'EN_ESPERA_FINANCIAMIENTO',
+    financingId: null,
+    scheduledDate: '2025-09-27',
+    assignedCrew: 'Cuadrilla F',
+    assignedResources: ['Equipo de señalización']
   },
   {
     id: 105,
@@ -124,6 +160,10 @@ export const dashboardData: Request[] = [
     date: '2025-09-24',
     source: 'CIUDADANO',
     externalReportId: 2005,
-    financialStatus: 'RECHAZADO'
+    financialStatus: 'RECHAZADO',
+    financingId: null,
+    scheduledDate: null,
+    assignedCrew: null,
+    assignedResources: null
   },
 ];

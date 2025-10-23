@@ -18,6 +18,10 @@ export interface ApiRequest {
   fuente: FuenteSolicitud;
   reporteIdExtern: number;
   estadoFinanciero: EstadoFinanciamiento;
+  idFinanciamiento: number | null;
+  fechaProgramada: string | null;
+  cuadrillaAsignada: string | null;
+  recursosAsignados: string[] | null;
 }
 
 // Tipo para uso interno en la UI (mantiene compatibilidad con componentes existentes)
@@ -32,6 +36,10 @@ export interface Request {
   source: FuenteSolicitud;
   externalReportId: number;
   financialStatus: EstadoFinanciamiento;
+  financingId: number | null;
+  scheduledDate: string | null;
+  assignedCrew: string | null;
+  assignedResources: string[] | null;
 }
 
 export interface Stats {
