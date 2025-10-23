@@ -62,12 +62,19 @@ export default function ExternalRequestsList() {
     setIsModalOpen(true);
   };
 
-  const handleConfirmRegister = async () => {
+  const handleConfirmRegister = async (prioridad: 'ALTA' | 'MEDIA' | 'BAJA') => {
     if (!selectedRequest) return;
 
     try {
       setRegistering(true);
-      const result = await externalSystemService.registerFromExternal(selectedRequest);
+      
+      // Crear una copia de la solicitud con la prioridad seleccionada
+      const requestWithPriority = {
+        ...selectedRequest,
+        prioridad
+      };
+      
+      const result = await externalSystemService.registerFromExternal(requestWithPriority);
       
       if (result.success) {
         // Mostrar mensaje de éxito con toast

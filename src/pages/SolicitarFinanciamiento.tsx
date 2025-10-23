@@ -111,7 +111,7 @@ const SolicitarFinanciamiento: React.FC = () => {
       }
 
       const payload: FinancingRequestPayload = {
-        originId: solicitudId,
+        originId: 1, // ID fijo que mapea el sistema de Mantenimiento Urbano en el sistema de Financiamiento
         requestAmount: parseFloat(montoEstimado),
         name: 'MANTENIMIENTO_URBANO',
         reason: request.description,
@@ -121,6 +121,7 @@ const SolicitarFinanciamiento: React.FC = () => {
       };
 
       console.log('Payload de financiamiento:', payload);
+      console.log('ID de solicitud en ruta:', solicitudId);
       
       // Usar toastPromise para manejar el estado de la petición
       await toastPromise(

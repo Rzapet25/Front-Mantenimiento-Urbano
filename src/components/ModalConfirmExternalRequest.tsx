@@ -1,11 +1,12 @@
 import { MapPin, FileText, AlertTriangle, User } from 'lucide-react';
+import { useState } from 'react';
 import type { ExternalRequest } from '../api/externalSystemService';
 import BaseModal from './BaseModal';
 
 interface ModalConfirmExternalRequestProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: (prioridad: 'ALTA' | 'MEDIA' | 'BAJA') => void;
   request: ExternalRequest | null;
   loading?: boolean;
 }
@@ -22,7 +23,13 @@ export default function ModalConfirmExternalRequest({
   request,
   loading = false,
 }: ModalConfirmExternalRequestProps) {
+  const [selectedPriority, setSelectedPriority] = useState<'ALTA' | 'MEDIA' | 'BAJA'>('MEDIA');
+
   if (!isOpen || !request) return null;
+
+  const handleConfirm = () => {
+    onConfirm(selectedPriority);
+  };
 
   return (
     <BaseModal isOpen={isOpen} onClose={onClose} maxWidth="max-w-2xl">
@@ -119,11 +126,31 @@ export default function ModalConfirmExternalRequest({
             </div>
           </div>
 
+          {/* Selector de Prioridad */}
+          <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+            <label className="block text-sm font-semibold text-gray-700 mb-3">
+              Asignar Prioridad <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={selectedPriority}
+              onChange={(e) => setSelectedPriority(e.target.value as 'ALTA' | 'MEDIA' | 'BAJA')}
+              disabled={loading}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition disabled:bg-gray-100 disabled:cursor-not-allowed"
+            >
+              <option value="BAJA">Baja</option>
+              <option value="MEDIA">Media</option>
+              <option value="ALTA">Alta</option>
+            </select>
+            <p className="mt-2 text-xs text-gray-500">
+              Selecciona la prioridad que se asignará a esta solicitud en el sistema de Mantenimiento Urbano.
+            </p>
+          </div>
+
           {/* Nota informativa */}
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-            <p className="text-sm text-amber-800">
-              <strong>Nota:</strong> La prioridad se asignará automáticamente como MEDIA si no está especificada.
-              Podrás modificarla después del registro.
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <p className="text-sm text-blue-800">
+              <strong>Importante:</strong> Una vez registrada, la solicitud quedará con estado "PENDIENTE" 
+              y podrás programarla o solicitar financiamiento según sea necesario.
             </p>
           </div>
         </div>
@@ -138,7 +165,7 @@ export default function ModalConfirmExternalRequest({
             Cancelar
           </button>
           <button
-            onClick={onConfirm}
+            onClick={handleConfirm}
             className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition disabled:bg-blue-300 disabled:cursor-not-allowed"
             disabled={loading}
           >
