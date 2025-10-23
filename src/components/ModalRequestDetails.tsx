@@ -187,7 +187,7 @@ export default function ModalRequestDetails({ request, isOpen, onClose }: ModalR
                     <div className="flex items-start gap-3">
                       <div className="flex-1">
                         <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">ID Externo</p>
-                        <p className="text-sm font-semibold text-gray-800">EXT-{String(request.externalReportId).padStart(3, '0')}</p>
+                        <p className="text-sm font-semibold text-gray-800">{request.externalReportId}</p>
                       </div>
                     </div>
                   )}

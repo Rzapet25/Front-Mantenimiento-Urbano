@@ -1,4 +1,4 @@
-import { MapPin, Calendar, FileText, AlertTriangle, User, Phone, Mail } from 'lucide-react';
+import { MapPin, FileText, AlertTriangle, User } from 'lucide-react';
 import type { ExternalRequest } from '../api/externalSystemService';
 import BaseModal from './BaseModal';
 
@@ -40,7 +40,7 @@ export default function ModalConfirmExternalRequest({
             </p>
           </div>
 
-          {/* Card de detalles de la solicitud con el mismo estilo que RequestDetailsCard */}
+          {/* Card de detalles de la solicitud */}
           <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 border border-green-200 shadow-sm">
             {/* Título con ID */}
             <div className="flex items-center gap-3 mb-4">
@@ -49,11 +49,12 @@ export default function ModalConfirmExternalRequest({
               </div>
               <div>
                 <h3 className="text-lg font-bold text-gray-800">
-                  ID Externo: {request.id}
+                  {request.titulo}
                 </h3>
-                <p className="text-sm text-gray-600 font-medium">{request.tipo}</p>
+                <p className="text-sm text-gray-600 font-medium">ID: {request.id} • {request.tipo}</p>
               </div>
             </div>
+            
             {/* Grid de información */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Ubicación */}
@@ -65,27 +66,43 @@ export default function ModalConfirmExternalRequest({
                 </div>
               </div>
 
-              {/* Fecha */}
-              <div className="flex items-start gap-3">
-                <Calendar className="text-green-600 mt-0.5 flex-shrink-0" size={18} />
-                <div className="flex-1">
-                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Fecha de Reporte</p>
-                  <p className="text-sm font-semibold text-gray-800">{request.fecha}</p>
-                </div>
-              </div>
-
-              {/* Prioridad */}
+              {/* Estado */}
               <div className="flex items-start gap-3">
                 <AlertTriangle className="text-green-600 mt-0.5 flex-shrink-0" size={18} />
                 <div className="flex-1">
-                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Prioridad</p>
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Estado</p>
                   <span className={`inline-block mt-1 px-3 py-1 rounded-full text-xs font-medium ${
-                    request.prioridad === 'ALTA' ? 'bg-red-100 text-red-800' :
-                    request.prioridad === 'MEDIA' ? 'bg-yellow-100 text-yellow-800' :
-                    'bg-green-100 text-green-800'
+                    request.estado === 'Aprobado' ? 'bg-green-100 text-green-800' :
+                    'bg-gray-100 text-gray-800'
                   }`}>
-                    {request.prioridad}
+                    {request.estado}
                   </span>
+                </div>
+              </div>
+
+              {/* Prioridad (si existe) */}
+              {request.prioridad && (
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="text-green-600 mt-0.5 flex-shrink-0" size={18} />
+                  <div className="flex-1">
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Prioridad</p>
+                    <span className={`inline-block mt-1 px-3 py-1 rounded-full text-xs font-medium ${
+                      request.prioridad === 'ALTA' ? 'bg-red-100 text-red-800' :
+                      request.prioridad === 'MEDIA' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-green-100 text-green-800'
+                    }`}>
+                      {request.prioridad}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Creado por */}
+              <div className="flex items-start gap-3">
+                <User className="text-green-600 mt-0.5 flex-shrink-0" size={18} />
+                <div className="flex-1">
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Creado Por</p>
+                  <p className="text-sm font-semibold text-gray-800">{request.creadoPor}</p>
                 </div>
               </div>
             </div>
@@ -102,37 +119,12 @@ export default function ModalConfirmExternalRequest({
             </div>
           </div>
 
-          {/* Información del ciudadano */}
-          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200 shadow-sm">
-            <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-              <User className="text-blue-600" size={20} />
-              Información del Ciudadano
-            </h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-start gap-3">
-                <User className="text-blue-600 mt-0.5 flex-shrink-0" size={18} />
-                <div className="flex-1">
-                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Nombre</p>
-                  <p className="text-sm font-semibold text-gray-800">{request.ciudadano.nombre}</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <Phone className="text-blue-600 mt-0.5 flex-shrink-0" size={18} />
-                <div className="flex-1">
-                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Teléfono</p>
-                  <p className="text-sm font-semibold text-gray-800">{request.ciudadano.telefono}</p>
-                </div>
-              </div>
-              {request.ciudadano.email && (
-                <div className="flex items-start gap-3 md:col-span-2">
-                  <Mail className="text-blue-600 mt-0.5 flex-shrink-0" size={18} />
-                  <div className="flex-1">
-                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Email</p>
-                    <p className="text-sm font-semibold text-gray-800">{request.ciudadano.email}</p>
-                  </div>
-                </div>
-              )}
-            </div>
+          {/* Nota informativa */}
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+            <p className="text-sm text-amber-800">
+              <strong>Nota:</strong> La prioridad se asignará automáticamente como MEDIA si no está especificada.
+              Podrás modificarla después del registro.
+            </p>
           </div>
         </div>
 

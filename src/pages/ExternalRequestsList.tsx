@@ -21,10 +21,9 @@ export default function ExternalRequestsList() {
   const [selectedRequest, setSelectedRequest] = useState<ExternalRequest | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [registering, setRegistering] = useState(false);
-  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   // Filtros
   const [prioridadFilter, setPrioridadFilter] = useState('');
-  const [fechaFilter, setFechaFilter] = useState('');
 
   // Cargar solicitudes externas al montar
   useEffect(() => {
@@ -46,9 +45,8 @@ export default function ExternalRequestsList() {
   };
   // Filtrado
   const filteredRequests = requests.filter(request => {
-    if (prioridadFilter && request.prioridad !== prioridadFilter) return false;
-    if (fechaFilter && request.fecha !== fechaFilter) return false;
-    return true;
+  if (prioridadFilter && request.prioridad !== prioridadFilter) return false;
+  return true;
   });
   // Paginación
   const [currentPage, setCurrentPage] = useState(1);
@@ -90,11 +88,20 @@ export default function ExternalRequestsList() {
     }
   };
 
-  const getPriorityColor = (priority: string) => {
+  const getPriorityColor = (priority?: string) => {
     switch (priority) {
       case 'ALTA': return 'bg-red-100 text-red-800';
       case 'MEDIA': return 'bg-yellow-100 text-yellow-800';
       case 'BAJA': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getEstadoColor = (estado: string) => {
+    switch (estado) {
+      case 'Aprobado': return 'bg-green-100 text-green-800';
+      case 'Pendiente': return 'bg-yellow-100 text-yellow-800';
+      case 'Rechazado': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -156,34 +163,21 @@ export default function ExternalRequestsList() {
             Haz clic en "Registrar" para importarlas al sistema de Mantenimiento Urbano.
           </p>
 
-          {/* Filtros de prioridad y fecha */}
-          <div className="mb-6 flex gap-4">
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Filtrar por Prioridad
-              </label>
-              <select
-                value={prioridadFilter}
-                onChange={e => setPrioridadFilter(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
-              >
-                <option value="">Todas las prioridades</option>
-                <option value="ALTA">Alta</option>
-                <option value="MEDIA">Media</option>
-                <option value="BAJA">Baja</option>
-              </select>
-            </div>
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Filtrar por Fecha
-              </label>
-              <input
-                type="date"
-                value={fechaFilter}
-                onChange={e => setFechaFilter(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
-              />
-            </div>
+          {/* Filtro de prioridad */}
+          <div className="mb-6 max-w-xs">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Filtrar por Prioridad
+            </label>
+            <select
+              value={prioridadFilter}
+              onChange={e => setPrioridadFilter(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+            >
+              <option value="">Todas las prioridades</option>
+              <option value="ALTA">Alta</option>
+              <option value="MEDIA">Media</option>
+              <option value="BAJA">Baja</option>
+            </select>
           </div>
 
           {/* Estado de carga/error */}
@@ -201,12 +195,13 @@ export default function ExternalRequestsList() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-200">
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">ID Externo</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">ID</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Título</th>
                     <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Tipo</th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Descripción</th>
                     <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Ubicación</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Estado</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Creado Por</th>
                     <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Prioridad</th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Fecha</th>
                     <th className="text-center py-3 px-4 text-sm font-semibold text-gray-700">Acciones</th>
                   </tr>
                 </thead>
@@ -217,13 +212,24 @@ export default function ExternalRequestsList() {
                       className="border-b border-gray-100 hover:bg-gray-50 transition"
                     >
                       <td className="py-3 px-4 text-sm font-medium text-gray-900">{request.id}</td>
+                      <td className="py-3 px-4 text-sm font-semibold text-gray-900">{request.titulo}</td>
                       <td className="py-3 px-4 text-sm text-gray-700">{request.tipo}</td>
-                      <td className="py-3 px-4 text-sm text-gray-700 max-w-xs truncate">{request.descripcion}</td>
                       <td className="py-3 px-4 text-sm text-gray-700">{request.ubicacion}</td>
                       <td className="py-3 px-4">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(request.prioridad)}`}>{request.prioridad}</span>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getEstadoColor(request.estado)}`}>
+                          {request.estado}
+                        </span>
                       </td>
-                      <td className="py-3 px-4 text-sm text-gray-700">{request.fecha}</td>
+                      <td className="py-3 px-4 text-sm text-gray-700">{request.creadoPor}</td>
+                      <td className="py-3 px-4">
+                        {request.prioridad ? (
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(request.prioridad)}`}>
+                            {request.prioridad}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-gray-400 italic">Sin asignar</span>
+                        )}
+                      </td>
                       <td className="py-3 px-4 text-center">
                         <ActionMenu request={request} />
                       </td>

@@ -38,6 +38,7 @@ export default function RequestDetailsCard({
             Solicitud #{request.id}
           </h3>
           <p className="text-sm text-gray-600 font-medium">{request.tipo}</p>
+          <p className="text-xs text-gray-500 mt-1">ID Externo: {request.externalReportId}</p>
         </div>
       </div>
 
