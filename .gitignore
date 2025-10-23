@@ -63,3 +63,5 @@ coverage/
 
 # Archivos de configuración local
 .eslintcache
+AUTENTICACION.md
+TOAST_EXAMPLES.md
