@@ -1,133 +1,116 @@
-// import apiClient from './axios';
+import axios from 'axios';
 import apiClient from './axios';
 
 /**
  * Servicio para manejar solicitudes del sistema externo (Participación Ciudadana)
- * Por ahora usa mock data, en el futuro se conectará a la API real
+ * Conectado al endpoint real: http://localhost:8080/api/participacion/reportes-aprobados
  */
 
-export interface ExternalRequest {
-  id: string; // ID del sistema externo
+// Cliente axios específico para el sistema externo (Participación Ciudadana)
+const externalApiClient = axios.create({
+  baseURL: 'http://localhost:8080/api',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Respuesta del backend externo
+export interface ExternalApiResponse {
+  id: number;
+  title: string;
+  description: string;
+  location: string;
   tipo: string;
-  descripcion: string;
-  ubicacion: string;
-  fecha: string;
-  ciudadano: {
-    nombre: string;
-    telefono: string;
-    email?: string;
-  };
-  prioridad: 'ALTA' | 'MEDIA' | 'BAJA';
-  imagen?: string;
+  estado: string;
+  creadoPor: string;
 }
 
-// Mock data temporal - Solicitudes recibidas de Participación Ciudadana
-const mockExternalRequests: ExternalRequest[] = [
-  {
-    id: 'EXT-001',
-    tipo: 'Baches',
-    descripcion: 'Bache grande en avenida principal cerca del mercado',
-    ubicacion: 'Av. Principal, Zona 7',
-    fecha: '2025-10-20',
-    ciudadano: {
-      nombre: 'Juan Pérez',
-      telefono: '555-1234',
-      email: 'juan@example.com',
-    },
-    prioridad: 'ALTA',
-  },
-  {
-    id: 'EXT-002',
-    tipo: 'Alumbrado',
-    descripcion: 'Poste de luz sin funcionar hace 3 días',
-    ubicacion: 'Calle 10, Zona 12',
-    fecha: '2025-10-21',
-    ciudadano: {
-      nombre: 'María López',
-      telefono: '555-5678',
-    },
-    prioridad: 'MEDIA',
-  },
-  {
-    id: 'EXT-003',
-    tipo: 'Limpieza',
-    descripcion: 'Acumulación de basura en esquina',
-    ubicacion: 'Esquina Calle 5 y 6, Zona 1',
-    fecha: '2025-10-22',
-    ciudadano: {
-      nombre: 'Carlos Ramírez',
-      telefono: '555-9012',
-      email: 'carlos@example.com',
-    },
-    prioridad: 'BAJA',
-  },
-];
+// Interface para uso interno en el frontend
+export interface ExternalRequest {
+  id: number; // ID del sistema externo (ahora es número)
+  tipo: string;
+  titulo: string;
+  descripcion: string;
+  ubicacion: string;
+  estado: string;
+  creadoPor: string;
+  prioridad?: 'ALTA' | 'MEDIA' | 'BAJA'; // Opcional hasta que el backend lo agregue
+}
 
 export const externalSystemService = {
-  // Obtener solicitudes del sistema externo (mock)
+  /**
+   * Obtiene solicitudes aprobadas del sistema externo (Participación Ciudadana)
+   * Endpoint: GET http://localhost:8080/api/participacion/reportes-aprobados
+   */
   getExternalRequests: async (): Promise<ExternalRequest[]> => {
-    // Simular delay de red
-    await new Promise(resolve => setTimeout(resolve, 800));
-    return mockExternalRequests;
-    
-    // TODO: Cuando la API esté lista, descomentar:
-    // const response = await apiClient.get<ExternalRequest[]>('/participacion-ciudadana/solicitudes');
-    // return response.data;
+    try {
+      const response = await externalApiClient.get<ExternalApiResponse[]>('/participacion/reportes-aprobados');
+      
+      // Mapear la respuesta del backend al formato interno
+      return response.data.map(item => ({
+        id: item.id,
+        tipo: item.tipo,
+        titulo: item.title,
+        descripcion: item.description,
+        ubicacion: item.location,
+        estado: item.estado,
+        creadoPor: item.creadoPor,
+        prioridad: undefined, // TODO: Cuando el backend agregue prioridad, mapearla aquí
+      }));
+    } catch (error) {
+      console.error('Error al obtener solicitudes externas:', error);
+      throw error;
+    }
   },
 
-  // Registrar solicitud externa en el sistema de Mantenimiento Urbano
-  // Este método tomará una solicitud externa y la convertirá en una solicitud interna
+  /**
+   * Registra una solicitud externa en el sistema de Mantenimiento Urbano
+   * Convierte una solicitud de Participación Ciudadana en una solicitud interna
+   */
   registerFromExternal: async (externalRequest: ExternalRequest): Promise<{ success: boolean; internalId?: number }> => {
-    // Mapear tipos del sistema externo a los tipos esperados por el backend
+    // Mapear tipos del sistema externo a los tipos esperados por el backend de mantenimiento
     const tipoMap: Record<string, string> = {
+      'Salud Pública': 'SALUD_PUBLICA',
+      'Infraestructura': 'INFRAESTRUCTURA',
       'Baches': 'INFRAESTRUCTURA',
       'Alumbrado': 'ALUMBRADO',
       'Limpieza': 'LIMPIEZA',
-      // añadir más mapeos según sea necesario
+      'Parques': 'PARQUES',
+      'Vías': 'VIAS',
+      // Agregar más mapeos según sea necesario
     };
 
     const rawTipo = externalRequest.tipo || '';
-    const mappedTipo = (tipoMap[rawTipo] || rawTipo).toUpperCase();
+    const mappedTipo = tipoMap[rawTipo] || rawTipo.toUpperCase().replace(/\s+/g, '_');
 
-    // Preparar los datos en el formato que espera el backend
+    // Preparar los datos en el formato que espera el backend de mantenimiento
     const requestData = {
       tipo: mappedTipo,
       descripcion: externalRequest.descripcion,
       ubicacion: externalRequest.ubicacion,
-      prioridad: externalRequest.prioridad,
+      prioridad: externalRequest.prioridad || 'MEDIA', // Valor por defecto hasta que el backend lo agregue
       fuente: 'PARTICIPACION_CIUDADANA' as const,
-      // Extraer número del ID externo (EXT-001 -> 1). Si no se puede, usar 0
-      reporteIdExtern: (() => {
-        try {
-          const parts = externalRequest.id.split('-');
-          const num = parseInt(parts[1], 10);
-          return Number.isFinite(num) ? num : 0;
-        } catch {
-          return 0;
-        }
-      })(),
+      reporteIdExtern: externalRequest.id, // Ahora es número directamente
     };
 
-    console.log('Enviando datos al backend:', requestData);
+    console.log('Registrando solicitud externa en Mantenimiento Urbano:', requestData);
 
     try {
-  // Intentar enviar al endpoint de registro (ruta correcta)
-  const response = await apiClient.post('/mantenimiento/solicitudes', requestData);
+      // Enviar al endpoint de registro de mantenimiento urbano
+      const response = await apiClient.post('/mantenimiento/solicitudes', requestData);
       return { success: true, internalId: response.data.id };
     } catch (err: unknown) {
-      // Si la ruta no existe en el backend (404) o hay problema de contrato,
-      // simulamos un registro exitoso para pruebas locales y devolvemos un ID simulado.
       interface ErrWithResponse { response?: { status?: number } }
       const status = (err as ErrWithResponse).response?.status;
-      console.warn('Error al enviar al backend (registerFromExternal):', status ?? err);
+      console.error('Error al registrar solicitud externa:', status ?? err);
+      
+      // Si el endpoint no existe (404), simular para pruebas
       if (status === 404) {
-        // Simular ID interno para pruebas UI
         const simulatedId = Math.floor(Math.random() * 1000) + 1000;
         console.info('Endpoint no encontrado (404). Simulando registro con ID interno:', simulatedId);
         return { success: true, internalId: simulatedId };
       }
 
-      // Re-throw si es otro tipo de error para que el caller pueda manejarlo
       throw err;
     }
   },
