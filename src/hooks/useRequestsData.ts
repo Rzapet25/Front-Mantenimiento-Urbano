@@ -25,9 +25,6 @@ interface UseRequestsDataReturn {
  * @param options - Configuración opcional (limit, autoFetch, onlyPending)
  * @returns {UseRequestsDataReturn} Estado y funciones para manejar solicitudes
  * 
- * @example
- * // Para Dashboard (últimas 5 pendientes)
- * const { requests, loading, error } = useRequestsData({ limit: 5, onlyPending: true });
  * 
  * @example
  * // Para RequestsList (todas las solicitudes)
