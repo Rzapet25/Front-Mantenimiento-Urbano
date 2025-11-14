@@ -1,0 +1,3 @@
+# Ignore Cypress test files and config from ESLint type-aware checks
+cypress
+cypress.config.ts

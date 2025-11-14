@@ -1,3 +1,7 @@
+# Cypress artefactos generados (no subir)
+cypress/videos/
+cypress/screenshots/
+cypress/debug/
 # Dependencias
 node_modules/
 # package-lock.json debe ser versionado para builds reproducibles
@@ -65,3 +69,10 @@ coverage/
 .eslintcache
 AUTENTICACION.md
 TOAST_EXAMPLES.md
+LOGIN-TESTING.md
+
+# Cypress env file (local only)
+cypress.env.json
+
+# Artefactos de pruebas
+cypress-artifacts.zip

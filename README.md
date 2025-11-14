@@ -1,4 +1,4 @@
-# Mantenimiento Urbano - Frontend
+ # Mantenimiento Urbano - Frontend
 
 Sistema de gestión de mantenimiento urbano con **arquitectura modular basada en componentes**, construido con React + TypeScript + Vite, que consume APIs REST mediante Axios.
 
@@ -306,7 +306,58 @@ VITE_API_URL=https://api.tu-dominio.com/api
 - **Tailwind CSS**: https://tailwindcss.com
 - **TypeScript**: https://www.typescriptlang.org
 
----
+## Credenciales para ingresar
 
+A continuación hay dos cuentas que puedes usar para ingresar a la aplicación:
+
+- Usuario: `admin`
+  Contraseña: `admin123`
+
+- Usuario: `operador`
+  Contraseña: `operador123`
+
+## Dirección de despliegue
+
+ URL de la  aplicación:
+
+```
+https://app.ejemplo-despliegue.test/mantenimiento-urbano
+```
+
+---
+# Prueba de aceptación E2E (Cypress)
+
+Este proyecto incluye una prueba de aceptación automatizada con Cypress para el flujo: listar solicitudes, filtrar por prioridad y solicitar financiamiento.
+
+## Contexto
+- La prueba simula el flujo real de un usuario administrador: accede, filtra solicitudes, abre el menú de acciones y realiza una solicitud de financiamiento.
+- El test es robusto ante cambios de página y espera correctamente los elementos clave.
+
+## Comandos principales
+
+Instalar dependencias (si no lo has hecho):
+
+```
+npm install
+```
+
+Ejecutar Cypress en modo interactivo:
+
+```
+npx cypress open
+```
+
+Ejecutar Cypress en modo headless (CI):
+
+```
+npx cypress run
+```
+
+## Ubicación del test
+- El spec principal está en: `cypress/e2e/financing.cy.ts`
+
+## Resultado esperado
+- El test debe completar el flujo de financiamiento sin errores.
+- Si ocurre un error, Cypress genera un video de la ejecución (en modo run) en la carpeta `cypress/videos/` 
 
 
